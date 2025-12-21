@@ -7,15 +7,17 @@ public class AiNav_ABC : MonoBehaviour
     public Transform pointA;
     public Transform pointB;
     public float agroRange = 5f;
-    public float speedBoost = 10f; 
+    public float speedBoost = 10f;
+    public float agroFillTime = 2f;
+    public float agroLoseTime = 10f;
     public Image agroIcon;
 
+    private bool chase = false;
     private NavMeshAgent agent;
     private Transform currentTarget;
     private float baseSpeed;
     private Transform player;
     private float agro = 0f;
-    private float agroFillTime = 2f;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -29,9 +31,16 @@ public class AiNav_ABC : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Patrol();
         CheckAgro();
-        Chase();
+        if (chase)
+        {
+            Chase();
+        }
+        else
+        {
+            Patrol();
+        }
+        
     }
     void Patrol()
     {
@@ -39,6 +48,11 @@ public class AiNav_ABC : MonoBehaviour
         {
             currentTarget = currentTarget == pointA ? pointB : pointA;
             agent.SetDestination(currentTarget.position);
+        }
+        if (agro >= 0.8f)
+        {
+           chase = true;
+            agent.speed = baseSpeed + speedBoost;
         }
     }
     void CheckAgro()
@@ -52,7 +66,7 @@ public class AiNav_ABC : MonoBehaviour
         }
         else
         {
-            agro -= Time.deltaTime / agroFillTime;
+            agro -= Time.deltaTime / agroLoseTime;
         }
         agro = Mathf.Clamp01(agro);
         agroIcon.fillAmount = agro;
@@ -60,14 +74,20 @@ public class AiNav_ABC : MonoBehaviour
     }
     void Chase()
     {
-        if(agro>=0.8f)
+        agent.SetDestination(player.position);
+
+        if (agro <= 0f) 
         {
-            agent.SetDestination(player.position);
-            agent.speed = baseSpeed+ speedBoost;
-        }
-        else if (agro <= 0f) 
-        {
+            chase = false;
             agent.speed = baseSpeed;
+            if (Vector3.Distance(transform.position, pointA.position) < Vector3.Distance(transform.position, pointB.position))
+            {
+                agent.SetDestination(pointA.position);
+            }else
+            {
+                agent.SetDestination(pointB.position);
+            }
+            
         }
     }
 }
