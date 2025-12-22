@@ -1110,7 +1110,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerBody: {fileID: 1897799294}
-  walkSpeed: 100
+  walkSpeed: 20
   mouseSensitivity: 200
 --- !u!114 &1897799305
 MonoBehaviour:
