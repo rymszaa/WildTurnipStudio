@@ -1,46 +1,70 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+
 public class PlayerMovment : MonoBehaviour
 {
-    [SerializeField] GameObject playerBody;
+    [Header("Movement")]
     [SerializeField] float walkSpeed = 10f;
 
-    public float mouseSensitivity = 100f;
+    [Header("Mouse Sensitivity")]
+    [SerializeField] float horizontalSensitivity = 250f;
+    [SerializeField] float verticalSensitivity = 200f;
+
+    [Header("Camera")]
+    [SerializeField] Transform cameraPivot;
 
     Vector2 moveInput;
-    Rigidbody myRigidbody;
+    float mouseXAccum;
+    float mouseYAccum;
+    float pitch;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    Rigidbody rb;
+
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-        myRigidbody = GetComponent<Rigidbody>();
+        rb = GetComponent<Rigidbody>();
     }
 
-
-    // Update is called once per frame
-void FixedUpdate()
+    void Update()
     {
-        //mouse move
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-
-        playerBody.transform.Rotate(Vector3.up * mouseX);
-
-
-        //move
-        Vector3 move =
-            myRigidbody.transform.forward * moveInput.y +
-            myRigidbody.transform.right * moveInput.x;
-
-        myRigidbody.MovePosition(
-            myRigidbody.position + move * walkSpeed * Time.fixedDeltaTime
-        );
+        // Accumulate mouse input every frame
+        mouseXAccum += Input.GetAxis("Mouse X") * horizontalSensitivity;
+        mouseYAccum += Input.GetAxis("Mouse Y") * verticalSensitivity;
     }
 
+    void FixedUpdate()
+    {
+        // --- Yaw (body rotation) ---
+        float yawStep = mouseXAccum * Time.fixedDeltaTime;
+        mouseXAccum = 0f;
+
+        rb.MoveRotation(
+            rb.rotation * Quaternion.Euler(0f, yawStep, 0f)
+        );
+
+        // --- Pitch (camera only) ---
+        float pitchStep = mouseYAccum * Time.fixedDeltaTime;
+        mouseYAccum = 0f;
+
+        pitch -= pitchStep;
+        pitch = Mathf.Clamp(pitch, -85f, 85f);
+        cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+
+        // --- Movement ---
+        Vector3 move =
+            transform.forward * moveInput.y +
+            transform.right * moveInput.x;
+
+        Vector3 velocity = move * walkSpeed;
+        velocity.y = rb.linearVelocity.y;
+
+        rb.linearVelocity = velocity;
+    }
 
     void OnMove(InputValue value)
     {
-        moveInput=value.Get<Vector2>();
+        moveInput = value.Get<Vector2>();
     }
 }
