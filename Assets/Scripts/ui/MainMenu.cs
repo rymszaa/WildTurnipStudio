@@ -1,16 +1,18 @@
+using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+
 
 public class MainMenu : MonoBehaviour
 {
     public void Continue()
     {
-        SceneManager.LoadScene("SampleScene");
+        LoadSeve.LoadGame("SampleScene");
     }
 
     public void NewGame()
     {
-        Debug.Log("add save system 2");
+        CreateNewGame.DeleteSeve();
+        CreateNewGame.CreateSeve();
     }
 
     public void LoadGame()
