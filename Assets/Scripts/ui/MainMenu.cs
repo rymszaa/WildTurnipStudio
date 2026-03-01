@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 
 public class MainMenu : MonoBehaviour
@@ -13,6 +14,7 @@ public class MainMenu : MonoBehaviour
     {
         CreateNewGame.DeleteSeve();
         CreateNewGame.CreateSeve();
+        SceneManager.LoadScene("SampleScene");
     }
 
     public void LoadGame()
