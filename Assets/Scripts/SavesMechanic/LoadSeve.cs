@@ -1,7 +1,7 @@
 using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-public static class LoadSeve
+public class LoadSeve : MonoBehaviour
 {
     private const string folderPath = "WildTrunipStudio/Seves/Seve1";
     public static PlayerInformations loadedPlayer;
