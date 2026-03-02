@@ -13,10 +13,12 @@ public class Grapple : MonoBehaviour
     public int maxDistance;
     private SpringJoint joint;
     [SerializeField] public float climbSpeed = 5f;
+    private CharacterController controller;
 
     void Awake()
     {
         lr = GetComponent<LineRenderer>();
+        controller = player.GetComponent<CharacterController>();
     }
 
     void OnEnable()
@@ -81,21 +83,47 @@ public class Grapple : MonoBehaviour
     {
         return pointToGrapple;
     }
+    
+    void HandleGrappleMovement()
+    {
+        if (controller == null || pointToGrapple == null) return;
+
+        // kierunek do punktu grappla
+        Vector3 directionToPoint = pointToGrapple - player.position;
+        float distance = directionToPoint.magnitude;
+
+        if (distance > 0.1f)
+        {
+            // ustaw prędkość przyciągania
+            float pullSpeed = 20f;
+
+            // kinematyczne przesunięcie gracza
+            Vector3 move = directionToPoint.normalized * pullSpeed * Time.deltaTime;
+
+            // nie przesuwaj za daleko
+            if (move.magnitude > distance)
+                move = directionToPoint;
+
+            controller.Move(move);
+        }
+    }
 
     void Update()
     {
         if (joint == null) return;
 
-        // Read the Digital input value
-        float climbHeld = climb.action.ReadValue<float>(); // 1 if held, 0 if not
+        // Odczyt wartości climb (1 jeśli przytrzymany, 0 jeśli nie)
+        float climbHeld = climb.action.ReadValue<float>();
 
+        // Przyciąganie tylko, gdy gracz przytrzymuje climb
         if (climbHeld > 0)
         {
-            // Move player up the rope
+            HandleGrappleMovement(); // przesunięcie CharacterController w kierunku grappla
+
+            // Skracanie liny (wspinanie)
             joint.maxDistance -= climbSpeed * Time.deltaTime;
             joint.minDistance -= climbSpeed * Time.deltaTime;
 
-            // Clamp distances
             joint.maxDistance = Mathf.Max(joint.maxDistance, 0.5f);
             joint.minDistance = Mathf.Max(joint.minDistance, 0f);
         }
@@ -103,3 +131,126 @@ public class Grapple : MonoBehaviour
 
 
 }
+//
+// using UnityEngine;
+// using UnityEngine.InputSystem;
+//
+// [RequireComponent(typeof(CharacterController))]
+// [RequireComponent(typeof(LineRenderer))]
+// public class Grapple : MonoBehaviour
+// {
+//     [Header("Input")]
+//     public InputActionReference shoot; // przycisk strzału grappla
+//     public InputActionReference climb; // przycisk wspinania
+//
+//     [Header("Setup")]
+//     public Transform camera;    // kamera gracza
+//     public Transform lineStart; // koniec pistoletu / punkt startowy liny
+//     public LayerMask whatIsGrappable;
+//
+//     [Header("Settings")]
+//     public float maxDistance = 50f;
+//     public float grapplePullSpeed = 50f; // siła przyciągania
+//     public float climbSpeed = 10f;
+//
+//     private CharacterController controller;
+//     private LineRenderer lr;
+//
+//     private Vector3 grapplePoint;
+//     private bool isGrappling = false;
+//     private float currentRopeLength;
+//
+//     void Awake()
+//     {
+//         controller = GetComponent<CharacterController>();
+//         lr = GetComponent<LineRenderer>();
+//
+//         lr.positionCount = 0;
+//         lr.useWorldSpace = true; // ważne, żeby linia rysowała się w świecie
+//     }
+//
+//     void OnEnable()
+//     {
+//         shoot.action.started += StartGrapple;
+//         shoot.action.canceled += StopGrapple;
+//     }
+//
+//     void OnDisable()
+//     {
+//         shoot.action.started -= StartGrapple;
+//         shoot.action.canceled -= StopGrapple;
+//     }
+//
+//     void StartGrapple(InputAction.CallbackContext ctx)
+//     {
+//         RaycastHit hit;
+//         if (Physics.Raycast(camera.position, camera.forward, out hit, maxDistance, whatIsGrappable))
+//         {
+//             grapplePoint = hit.point;
+//             currentRopeLength = Vector3.Distance(transform.position, grapplePoint);
+//
+//             isGrappling = true;
+//             lr.positionCount = 2;
+//         }
+//     }
+//
+//     void StopGrapple(InputAction.CallbackContext ctx)
+//     {
+//         isGrappling = false;
+//         lr.positionCount = 0;
+//     }
+//
+//     void Update()
+//     {
+//         if (!isGrappling) return;
+//
+//         HandleGrappleMovement();
+//         HandleClimb();
+//         DrawRope();
+//     }
+//
+//     void HandleGrappleMovement()
+//     {
+//         Vector3 directionToPoint = grapplePoint - transform.position;
+//         float distance = directionToPoint.magnitude;
+//
+//         if (distance > 0.1f)
+//         {
+//             // przyciąganie gracza
+//             Vector3 pull = directionToPoint.normalized * grapplePullSpeed * Time.deltaTime;
+//
+//             // nie przekraczaj punktu zaczepienia
+//             if (pull.magnitude > distance)
+//                 pull = directionToPoint;
+//
+//             controller.Move(pull);
+//         }
+//     }
+//
+//     void HandleClimb()
+//     {
+//         float climbHeld = climb.action.ReadValue<float>();
+//
+//         if (climbHeld > 0)
+//         {
+//             currentRopeLength -= climbSpeed * Time.deltaTime;
+//             currentRopeLength = Mathf.Max(currentRopeLength, 1f);
+//         }
+//     }
+//
+//     void DrawRope()
+//     {
+//         lr.SetPosition(0, lineStart.position);
+//         lr.SetPosition(1, grapplePoint);
+//     }
+//
+//     public bool IsGrappling()
+//     {
+//         return isGrappling;
+//     }
+//
+//     public Vector3 GetGrapplePoint()
+//     {
+//         return grapplePoint;
+//     }
+// }
