@@ -20,9 +20,12 @@ public class PlayerMove : MonoBehaviour
     private Vector3 horizontalVelocity;
     private float verticalVelocity;
 
+    public Animator animator;
+
     void Awake()
     {
         controller = GetComponent<CharacterController>();
+        animator = GetComponentInChildren<Animator>();
     }
 
     // NEW INPUT SYSTEM (Send Messages)
@@ -46,6 +49,9 @@ public class PlayerMove : MonoBehaviour
 
         Vector3 finalVelocity = horizontalVelocity + Vector3.up * verticalVelocity;
         controller.Move(finalVelocity * Time.deltaTime);
+
+        animator.SetFloat("MoveX", moveInput.x);
+        animator.SetFloat("MoveY", moveInput.y);
     }
 
     void HandleHorizontalMovement()
@@ -74,6 +80,7 @@ public class PlayerMove : MonoBehaviour
                 groundFriction * Time.deltaTime
             );
         }
+
     }
 
     void ApplyGravity()
